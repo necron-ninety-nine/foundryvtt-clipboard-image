@@ -140,7 +140,8 @@ Hooks.once('init', function() {
       ],
       onDown: () => {
         let succeeded = false;
-        if (canvas.activeLayer._copy.length) {
+        // V13 compatibility: check if _copy exists before accessing length
+        if (canvas.activeLayer?._copy?.length) {
           console.warn("Image Clipboard: Priority given to Foundry copied objects.");
           return succeeded;
         }

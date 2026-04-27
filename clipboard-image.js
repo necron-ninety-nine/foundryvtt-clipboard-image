@@ -61,10 +61,20 @@ function _pasteBlob(blob) {
   
   // Foundry V13 compatibility: use tracked mouse position
   const mousePos = CLIPBOARD_MOUSE_POS;
+  
+  console.log("Clipboard Image: Mouse position:", mousePos);
+  console.log("Clipboard Image: Canvas dimensions:", canvas.dimensions.width, canvas.dimensions.height);
 
-  if (document.activeElement !== $(".game")[0] ||
-    mousePos.x < 0 || mousePos.y < 0 ||
-    mousePos.x > canvas.dimensions.width || mousePos.y > canvas.dimensions.height) return;
+  if (document.activeElement !== $(".game")[0]) {
+    console.warn("Clipboard Image: Focus not on game canvas");
+    return;
+  }
+  
+  if (mousePos.x < 0 || mousePos.y < 0 ||
+    mousePos.x > canvas.dimensions.width || mousePos.y > canvas.dimensions.height) {
+    console.warn("Clipboard Image: Mouse position out of bounds:", mousePos);
+    return;
+  }
 
   CLIPBOARD_IMAGE_LOCKED = true;
 
@@ -74,13 +84,17 @@ function _pasteBlob(blob) {
     const filename = "pasted_image_" + Date.now() + ".png";
     const file = new File([blob], filename, {type: blob.type});
     const targetFolder = game.settings.get('clipboard-image', 'image-location');
-    const path = (await FilePicker.upload(_clipboardGetSource(), targetFolder, file, {})).path;
+    const uploadResult = await FilePicker.upload(_clipboardGetSource(), targetFolder, file, {});
+    const path = uploadResult.path;
+    
+    console.log("Clipboard Image: Uploaded to", path);
 
-    const curDims = game.scenes.active.dimensions
-    let image = new Image()
+    const curDims = game.scenes.active.dimensions;
+    let image = new Image();
     image.src = path;
     image.onerror = function () {
-      CLIPBOARD_IMAGE_LOCKED = false
+      console.error("Clipboard Image: Failed to load image");
+      CLIPBOARD_IMAGE_LOCKED = false;
     };
     _clipboardGetImageSizeFast(image, async function (imgWidth, imgHeight) {
       const origWidth = imgWidth;
@@ -89,6 +103,8 @@ function _pasteBlob(blob) {
         imgWidth = curDims.sceneWidth / 3;
         imgHeight = imgWidth * imgHeight / origWidth;
       }
+
+      console.log("Clipboard Image: Creating tile at", mousePos.x, mousePos.y, "size:", imgWidth, imgHeight);
 
       let newTile = [{
         texture: {
@@ -103,7 +119,14 @@ function _pasteBlob(blob) {
         hidden: CLIPBOARD_HIDDEN_MODE,
         locked: false,
       }];
-      await canvas.scene.createEmbeddedDocuments("Tile", newTile);
+      
+      try {
+        const created = await canvas.scene.createEmbeddedDocuments("Tile", newTile);
+        console.log("Clipboard Image: Tile created successfully:", created);
+      } catch (error) {
+        console.error("Clipboard Image: Failed to create tile:", error);
+        ui.notifications.error("Failed to create tile. Check console for details.");
+      }
       CLIPBOARD_IMAGE_LOCKED = false;
     });
   };

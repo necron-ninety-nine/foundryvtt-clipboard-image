@@ -101,19 +101,19 @@ function _pasteBlob(blob) {
     console.log("Clipboard Image: Using path:", path);
 
     const curDims = game.scenes.active.dimensions;
+    
+    // Create image and wait for it to fully load before creating tile
     let image = new Image();
     image.crossOrigin = "anonymous";
-    image.src = path;
-    image.onerror = function () {
-      console.error("Clipboard Image: Failed to load image from", path);
-      CLIPBOARD_IMAGE_LOCKED = false;
-    };
-    image.onload = function() {
+    
+    image.onload = async function() {
       console.log("Clipboard Image: Image loaded successfully from", path);
-    };
-    _clipboardGetImageSizeFast(image, async function (imgWidth, imgHeight) {
+      
+      let imgWidth = image.width;
+      let imgHeight = image.height;
       const origWidth = imgWidth;
 
+      // Scale down if image is larger than canvas
       if (imgHeight > curDims.sceneHeight || imgWidth > curDims.sceneWidth) {
         imgWidth = curDims.sceneWidth / 3;
         imgHeight = imgWidth * imgHeight / origWidth;
@@ -134,7 +134,7 @@ function _pasteBlob(blob) {
         height: imgHeight,
         x: mousePos.x,
         y: mousePos.y,
-        sort: 0,
+        sort: canvas.scene.data.sort + 1 || 1,
         rotation: 0,
         hidden: CLIPBOARD_HIDDEN_MODE,
         locked: false,
@@ -150,7 +150,7 @@ function _pasteBlob(blob) {
         
         // V13: Force canvas to refresh and show the new tile
         if (canvas?.tiles) {
-          await canvas.tiles.draw();
+          await canvas.tiles.render();
         }
         
         // Show success notification
@@ -160,7 +160,15 @@ function _pasteBlob(blob) {
         ui.notifications.error("Failed to create tile. Check console for details.");
       }
       CLIPBOARD_IMAGE_LOCKED = false;
-    });
+    };
+    
+    image.onerror = function () {
+      console.error("Clipboard Image: Failed to load image from", path);
+      CLIPBOARD_IMAGE_LOCKED = false;
+    };
+    
+    // Set src last to trigger loading
+    image.src = path;
   };
   reader.readAsDataURL(blob);
 }

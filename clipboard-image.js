@@ -91,8 +91,8 @@ function _pasteBlob(blob) {
     if (uploadResult.url) {
       path = uploadResult.url;
     } else if (uploadResult.path) {
-      // V13: Convert to lowercase assets/ path, path already includes folder
-      path = `assets/${uploadResult.path}`;
+      // V13: uploadResult.path already includes the full path, use as-is
+      path = uploadResult.path;
     } else {
       path = uploadResult;
     }

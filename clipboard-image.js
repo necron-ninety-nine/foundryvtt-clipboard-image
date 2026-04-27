@@ -124,6 +124,11 @@ function _pasteBlob(blob) {
       let newTile = [{
         texture: {
           src: path,
+          fit: "contain",
+          offsetX: 0,
+          offsetY: 0,
+          anchorX: 0.5,
+          anchorY: 0.5,
         },
         width: imgWidth,
         height: imgHeight,
@@ -133,11 +138,23 @@ function _pasteBlob(blob) {
         rotation: 0,
         hidden: CLIPBOARD_HIDDEN_MODE,
         locked: false,
+        occlusion: {
+          mode: 0,
+          alpha: 0,
+        },
       }];
       
       try {
         const created = await canvas.scene.createEmbeddedDocuments("Tile", newTile);
         console.log("Clipboard Image: Tile created successfully:", created);
+        
+        // V13: Force canvas to refresh and show the new tile
+        if (canvas?.tiles) {
+          await canvas.tiles.draw();
+        }
+        
+        // Show success notification
+        ui.notifications.info("Image pasted successfully!");
       } catch (error) {
         console.error("Clipboard Image: Failed to create tile:", error);
         ui.notifications.error("Failed to create tile. Check console for details.");

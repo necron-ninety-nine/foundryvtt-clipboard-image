@@ -59,11 +59,8 @@ async function _extractBlob(clipItems) {
 function _pasteBlob(blob) {
   game.canvas.tiles.activate();
   
-  // Foundry V13 compatibility: use canvas mouse position directly
-  const mousePos = {
-    x: canvas.mousePosition.x,
-    y: canvas.mousePosition.y
-  };
+  // Foundry V13 compatibility: use tracked mouse position
+  const mousePos = CLIPBOARD_MOUSE_POS;
 
   if (document.activeElement !== $(".game")[0] ||
     mousePos.x < 0 || mousePos.y < 0 ||
@@ -115,6 +112,19 @@ function _pasteBlob(blob) {
 
 let CLIPBOARD_IMAGE_LOCKED = false;
 let CLIPBOARD_HIDDEN_MODE = false;
+let CLIPBOARD_MOUSE_POS = { x: 0, y: 0 };
+
+// Track mouse position on canvas for V13 compatibility
+Hooks.once('ready', function() {
+  if (canvas?.stage) {
+    canvas.stage.on('pointermove', (event) => {
+      CLIPBOARD_MOUSE_POS = {
+        x: event.data.global.x,
+        y: event.data.global.y
+      };
+    });
+  }
+});
 
 document.addEventListener("keydown", event => {
   CLIPBOARD_HIDDEN_MODE = (event.ctrlKey || event.metaKey) && event.getModifierState('CapsLock');

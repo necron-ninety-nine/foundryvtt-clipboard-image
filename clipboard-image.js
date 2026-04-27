@@ -91,8 +91,8 @@ function _pasteBlob(blob) {
     if (uploadResult.url) {
       path = uploadResult.url;
     } else if (uploadResult.path) {
-      // Convert path to URL for V13
-      path = `data/${uploadResult.path}`;
+      // V13: Use the path directly without 'data/' prefix for Assets folder
+      path = uploadResult.path;
     } else {
       path = uploadResult;
     }
@@ -106,14 +106,13 @@ function _pasteBlob(blob) {
     image.src = path;
     image.onerror = function () {
       console.error("Clipboard Image: Failed to load image from", path);
-      // Try alternative path formats
-      const altPath = uploadResult.path || uploadResult;
+      // Try with data/ prefix as fallback
+      const altPath = `data/${uploadResult.path}`;
       console.log("Clipboard Image: Trying alternative path:", altPath);
       image.src = altPath;
-      CLIPBOARD_IMAGE_LOCKED = false;
     };
     image.onload = function() {
-      console.log("Clipboard Image: Image loaded successfully");
+      console.log("Clipboard Image: Image loaded successfully from", path);
     };
     _clipboardGetImageSizeFast(image, async function (imgWidth, imgHeight) {
       const origWidth = imgWidth;

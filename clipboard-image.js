@@ -85,16 +85,35 @@ function _pasteBlob(blob) {
     const file = new File([blob], filename, {type: blob.type});
     const targetFolder = game.settings.get('clipboard-image', 'image-location');
     const uploadResult = await FilePicker.upload(_clipboardGetSource(), targetFolder, file, {});
-    const path = uploadResult.path;
     
-    console.log("Clipboard Image: Uploaded to", path);
+    // V13 compatibility: get the proper URL for the uploaded file
+    let path;
+    if (uploadResult.url) {
+      path = uploadResult.url;
+    } else if (uploadResult.path) {
+      // Convert path to URL for V13
+      path = `data/${uploadResult.path}`;
+    } else {
+      path = uploadResult;
+    }
+    
+    console.log("Clipboard Image: Uploaded to", uploadResult);
+    console.log("Clipboard Image: Using path:", path);
 
     const curDims = game.scenes.active.dimensions;
     let image = new Image();
+    image.crossOrigin = "anonymous";
     image.src = path;
     image.onerror = function () {
-      console.error("Clipboard Image: Failed to load image");
+      console.error("Clipboard Image: Failed to load image from", path);
+      // Try alternative path formats
+      const altPath = uploadResult.path || uploadResult;
+      console.log("Clipboard Image: Trying alternative path:", altPath);
+      image.src = altPath;
       CLIPBOARD_IMAGE_LOCKED = false;
+    };
+    image.onload = function() {
+      console.log("Clipboard Image: Image loaded successfully");
     };
     _clipboardGetImageSizeFast(image, async function (imgWidth, imgHeight) {
       const origWidth = imgWidth;

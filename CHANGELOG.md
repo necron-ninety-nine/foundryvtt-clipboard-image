@@ -1,3 +1,9 @@
+### 1.0.0
+* Foundry V13 compatibility update
+* Fixed canvas API for mouse position detection (V13 breaking changes)
+* Forked and maintained by necron-ninety-nine
+* Original module by JeansenVaars (Saif Addin Ellafi)
+
 ### 0.4.0
 * Support Foundry V12
 

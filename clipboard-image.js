@@ -58,7 +58,12 @@ async function _extractBlob(clipItems) {
 
 function _pasteBlob(blob) {
   game.canvas.tiles.activate();
-  const mousePos = canvas.app.renderer.events.pointer.getLocalPosition(canvas.stage);
+  
+  // Foundry V13 compatibility: use canvas mouse position directly
+  const mousePos = {
+    x: canvas.mousePosition.x,
+    y: canvas.mousePosition.y
+  };
 
   if (document.activeElement !== $(".game")[0] ||
     mousePos.x < 0 || mousePos.y < 0 ||
